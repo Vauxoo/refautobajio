@@ -1,0 +1,4 @@
+[submodule "refautobajio"]
+	path = refautobajio
+	url = git@git.vauxoo.com:vauxoo/refautobajio.git
+	branch = 17.0
