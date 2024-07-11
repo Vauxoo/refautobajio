@@ -2,3 +2,7 @@
 	path = refautobajio
 	url = git@git.vauxoo.com:vauxoo/refautobajio.git
 	branch = 17.0
+[submodule "partner-contact"]
+	path = partner-contact
+	url = git@github.com:Vauxoo/partner-contact.git
+	branch = 17.0
