@@ -6,3 +6,7 @@
 	path = partner-contact
 	url = git@github.com:Vauxoo/partner-contact.git
 	branch = 17.0
+[submodule "brand"]
+	path = brand
+	url = git@github.com:Vauxoo/brand.git
+	branch = 17.0
