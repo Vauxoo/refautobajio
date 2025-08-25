@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="asignar_canal" model="base.automation">
+        <field name="name">Asignar Canal</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('autoazur.field_sale_order__x_studio_mktcode')])]"/>
+        <field name="action_server_ids">update_task_server</field>
+        <field name="active" eval="True"/>
+    </record>
+
+
+
+    <record id="asignar_canal_server" model="ir.actions.server">
+        <field name="name">Asignar canal</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+             <![CDATA[
+if record.x_studio_mktcode:
+    equipo_venta = model.env['crm.team'].search([('x_studio_cdigo', '=', record.x_studio_mktcode)],
+    limit=1)
+    if equipo_venta:
+        record['team_id'] = equipo_venta.id
+    else: record['team_id'] = 1
+        ]]>
+        </field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="asignar_canal"/>
+    </record>
+
+
+    <record id="asignar_almacen" model="base.automation">
+        <field name="name">Asignar Almacén</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="trigger">on_create_or_write</field>
+        <field name="trigger_field_ids" eval="[(6, 0, [ref('sale.field_sale_order__order_line')])]"/>
+        <field name="action_server_ids">update_task_server</field>
+        <field name="active" eval="True"/>
+    </record>
+
+
+    <record id="asignar_almacen_server" model="ir.actions.server">
+        <field name="name">Asignar Almacén</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+            <![CDATA[
+if record.team_id:
+        if record.x_studio_tipo_de_venta == 'Full':
+                record['warehouse_id'] = record.team_id.x_studio_almacn_full.id
+                #record['x_studio_almacen'] = record.team_id.x_studio_almacn_full.id
+        elif record.x_studio_tipo_de_venta == 'Drop':
+                record['warehouse_id'] = record.team_id.x_studio_almacn_drop.id
+                #record['x_studio_almacen'] = record.team_id.x_studio_almacn_drop.id
+else:
+    record['warehouse_id'] = 1
+
+
+            ]]>
+        </field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="asignar_almacen"/>
+    </record>
+
+
+<!--/////////////////////////-->
+
+
+<record id="stopper" model="base.automation">
+        <field name="name">Stopper</field>
+        <field name="model_id" ref="model_x_linstopper"/>
+        <field name="trigger">on_create</field>
+        <field name="action_server_ids">update_task_server</field>
+        <field name="active" eval="True"/>
+    </record>
+
+
+    <record id="stopper_server" model="ir.actions.server">
+        <field name="name">Stopper Server</field>
+        <field name="model_id" ref="model_x_linstopper"/>
+        <field name="state">webhook</field>
+        <field name="webhook_url">https://mkt-odoo-functions.azurewebsites.net/api/WHK_ODOO_ZeroStock?code=ohRSAUeN9GCIVCgWbFlPQp54P9PCa2k2Hkcnr4TINuG7AzFuUrNglw==</field>
+        <field name="webhook_field_ids" eval="[(6, 0, [ref('autoazur.field_x_linstopper__x_studio_azaccountid'),ref('autoazur.field_x_linstopper__x_studio_barcode'),ref('autoazur.field_x_linstopper__x_studio_cdb'),ref('autoazur.field_x_linstopper__x_studio_cdb2'),ref('autoazur.field_x_linstopper__x_studio_default_code')])]"></field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="stopper"/>
+    </record>
+
+
+</odoo>

@@ -1,0 +1,463 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo noupdate="1">
+    <record forcecreate="True" id="autoazur_confirm_drop" model="ir.cron">
+        <field name="name">Confirmar Drop</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="priority">5</field>
+        <field name="state">code</field>
+        <field name="code">sale_orders_to_confirm = model.env['sale.order'].search([('state', '=', 'draft'),('x_studio_tipo_de_venta', '=', 'Drop'),('x_studio_status', '=', 'Vigente'),('create_date', '>', '2023-01-30 23:59:59')])
+for order in sale_orders_to_confirm:
+    order.action_confirm()
+        </field>
+    </record>
+
+
+    <record forcecreate="True" id="autoazur_confirm_full" model="ir.cron">
+        <field name="name">Confirmar Full</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="state">code</field>
+        <field name="priority">6</field>
+        <field name="code">
+sale_orders_to_confirm = model.env['sale.order'].search([
+            ('state', '=', 'draft'),
+            ('x_studio_tipo_de_venta', '=', 'Full'),
+            ('create_date', '>', '2023-01-30 00:59:59'),
+            ])
+for order in sale_orders_to_confirm:
+    order['state'] = 'sale'
+
+
+        </field>
+    </record>
+
+
+    <record forcecreate="True" id="autoazur_get_stock" model="ir.cron">
+        <field name="name">Get Stock / Sync Autoazur Nokits</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">4</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_invubisync"/>
+        <field name="state">code</field>
+        <field name="priority">6</field>
+        <field name="code">
+        <![CDATA[
+invubisync_records = env['x_invubisync'].search([
+('id', '!=', False),
+('create_date', '>', '2023-01-30 23:59:59'),
+])
+for record in invubisync_records:
+        cantidad = record.x_studio_cantidad_minima
+        if record.x_studio_sincronizar_por == "Almacen":
+            if record.x_studio_almacenes:
+                location_ids = []
+                for almacen in record.x_studio_almacenes:
+                    # Obtener las ubicaciones relacionadas con cada almacén
+                    almacen_locations = env['stock.location'].search([
+                        ('location_id', 'child_of', [almacen.view_location_id.id])
+                    ]).ids
+                    location_ids.extend(almacen_locations)
+        else:
+            if record.x_studio_ubicaciones:
+                location_ids = record.x_studio_ubicaciones.ids
+
+        if location_ids:
+            now = datetime.datetime.now()
+            one_hour_ago = now - datetime.timedelta(hours=4)
+            # Consultar las existencias por producto en esas ubicaciones
+            query = """
+            SELECT product_id, sum(quantity) as quantity > cantidad
+            FROM stock_quant
+            WHERE location_id IN %s
+            AND write_date > %s
+            GROUP BY product_id
+            """
+            env.cr.execute(query, (tuple(location_ids), one_hour_ago))
+            productos = env.cr.fetchall()
+            # Limpiar los registros existentes en x_studio_inventarios
+            #---------------Generar Histórico
+            
+
+            historico = model.env['x_historico'].create({
+                    'company_id' : model.env.company.id,
+                    'x_studio_ubicacin' : record.id,
+                    'name' : record.x_name,
+                })
+            fecha_actualizacion = datetime.datetime.now() - datetime.timedelta(hours=6)
+            tabla_html = f'''<table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
+            <tr style="background-color: #A3CF95; font-size: 13px;">
+            <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Producto</th>
+            <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">SKU</th>
+             <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Stock</th>
+              <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Fecha y Hora: {fecha_actualizacion}</th>
+            </tr>'''
+            
+            for line_hist in record.x_studio_inventarios:
+                
+                tabla_html += f'''
+                <tr style="background-color: #DAE1CD;">
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_producto.name}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_sku}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_stock}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{fecha_actualizacion}</td>
+                    </tr>
+                '''
+                
+            
+            historico['x_studio_reporte'] = f'''{historico.x_studio_reporte if historico.x_studio_reporte != False else ''}{tabla_html}</table>'''
+            
+            
+            #---------------
+            record.x_studio_inventarios.unlink()
+            # Crear nuevos registros con las existencias agrupadas por producto
+            for producto_id, cantidad in productos:
+                env['x_lininvsync'].create({
+                'x_studio_inventario_por_ubicacin': record.id,
+                'x_studio_producto': producto_id,
+                'x_name': producto_id,
+                'x_studio_stock': cantidad,
+                })
+                ]]>
+        </field>
+    </record>
+
+    <record forcecreate="True" id="autoazur_get_stock_kits" model="ir.cron">
+        <field name="name">Get Stock / Sync Autoazur Kits</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">4</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_invubisync"/>
+        <field name="state">code</field>
+        <field name="priority">6</field>
+        <field name="code">
+<![CDATA[
+# Obtener la fecha y hora actual
+current_time = datetime.datetime.now()
+# Calcular la hora de hace 4 horas
+four_hours_ago = current_time - datetime.timedelta(hours=1)
+invubisync_records = env['x_invubisync'].search([
+('id', '!=', False),
+('create_date', '>', '2023-01-30 23:59:59'),
+])
+for record in invubisync_records:
+        cantidad = record.x_studio_cantidad_minima
+        if record.x_studio_sincronizar_por == "Almacen":
+            if record.x_studio_almacenes:
+                location_ids = []
+                for almacen in record.x_studio_almacenes:
+                    # Obtener las ubicaciones relacionadas con cada almacén
+                    almacen_locations = env['stock.location'].search([
+                        ('location_id', 'child_of', [almacen.view_location_id.id])
+                    ]).ids
+                    location_ids.extend(almacen_locations)
+        else:
+            if record.x_studio_ubicaciones:
+                location_ids = record.x_studio_ubicaciones.ids
+        if location_ids:
+            # Limpiar los registros existentes en x_studio_inventarios
+            #---------------Generar Histórico
+            
+
+            historico = model.env['x_historico'].create({
+                    'company_id' : model.env.company.id,
+                    'x_studio_ubicacin' : record.id,
+                    'name' : record.x_name,
+                })
+            fecha_actualizacion = datetime.datetime.now() - datetime.timedelta(hours=6)
+            tabla_html = f'''<table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
+            <tr style="background-color: #A3CF95; font-size: 13px;">
+            <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Producto</th>
+            <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">SKU</th>
+             <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Stock</th>
+              <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Fecha y Hora: {fecha_actualizacion}</th>
+            </tr>'''
+            
+            for line_hist in record.x_studio_inventarios:
+                
+                tabla_html += f'''
+                <tr style="background-color: #DAE1CD;">
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_producto.name}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_sku}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_stock}</td>
+                    <td style="border: 1px solid black; font-weight: bold; text-align: center;">{fecha_actualizacion}</td>
+                    </tr>
+                '''
+                
+            
+            historico['x_studio_reporte'] = f'''{historico.x_studio_reporte if historico.x_studio_reporte != False else ''}{tabla_html}</table>'''
+            
+            
+            #---------------
+            record.x_studio_inventarios.unlink()
+            # Buscar las líneas de movimiento que han ocurrido en las últimas 4 horas
+            move_lines = env['stock.move.line'].search([
+            ('date', '>', four_hours_ago),
+            ('location_id', 'in', location_ids),
+            ])
+            move_lines += env['stock.move.line'].search([
+            ('date', '>', four_hours_ago),
+            ('location_dest_id', 'in', location_ids),
+            ])
+            sale_lines = env['sale.order.line'].search([
+            ('create_date', '>', four_hours_ago),
+            ('order_id.state', 'in', ['sale','done']),
+            ])
+
+            # Obtener los productos relacionados con esos movimientos
+            move_product_ids = move_lines.mapped('product_id.id')
+            sale_product_ids = sale_lines.mapped('product_id.id')
+            combined_product_ids = list(set(move_product_ids + sale_product_ids))
+            products_recently_create = model.env['product.product'].search([('create_date','>=',datetime.datetime.now()-datetime.timedelta(hours=1))])
+            recently_create_ids = products_recently_create.mapped('id')
+            combined_product_ids = list(set(combined_product_ids + recently_create_ids))
+            # Filtrar productos que hayan tenido movimientos recientes
+            products = env['product.product'].search([
+            ('id', 'in', combined_product_ids),
+            ('type', '=', 'product')
+            ])
+            aux_products_bom = []
+            for p in products:
+                listas = model.env['mrp.bom.line'].search([('product_id','=',p.id)])
+                productos_principales = listas.mapped('parent_product_tmpl_id.product_variant_id')
+                for element in productos_principales:
+                    if element not in aux_products_bom:
+                        aux_products_bom.append(element.id)
+            #raise UserError(str(products))
+            products_bom = model.env['product.product'].search([('id','in',aux_products_bom)])
+            products = list(set(products + products_bom))
+
+            # Procesar todos los productos (normales y kits)
+            for product in products:
+                product_qty = 0
+                if product.bom_ids: # Verificar si el producto es un kit
+                    # Calcular la existencia del kit basándose en sus componentes
+                    quantities = []
+                    for bom_line in product.bom_ids.bom_line_ids:
+                        component_qty = sum(bom_line.product_id.stock_quant_ids.filtered(
+                            lambda q: q.location_id.id in location_ids).mapped('available_quantity'))
+                        quantities.append(component_qty // bom_line.product_qty if bom_line.product_qty > 0 else 0)
+                    product_qty = min(quantities) if quantities else 0
+                else:
+                    # Calcular la existencia para productos normales
+                    product_qty = sum(product.stock_quant_ids.filtered(
+                    lambda q: q.location_id.id in location_ids).mapped('available_quantity'))
+                    # Asegurarse de que la cantidad no sea negativa
+                product_qty = max(product_qty, 0)
+                if product_qty > cantidad:
+                    # Crear el registro en x_lininvsync solo si ha habido movimientos recientes
+                    env['x_lininvsync'].create({
+                    'x_studio_inventario_por_ubicacin': record.id,
+                    'x_studio_producto': product.id,
+                    'x_name': product.display_name,
+                    'x_studio_stock': product_qty,
+                    })
+]]>
+        </field>
+    </record>
+
+
+
+    <record forcecreate="True" id="autoazur_del_historico" model="ir.cron">
+        <field name="name">Eliminar historicos de una semana atrás</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">1</field>
+        <field name="interval_type">weeks</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_historico"/>
+        <field name="priority">5</field>
+        <field name="state">code</field>
+        <field name="code">
+<![CDATA[
+week_ago = datetime.datetime.now() - datetime.timedelta(weeks=1)
+records = model.env['x_historico'].search([('create_date','<=',week_ago)])
+
+for historico in records:
+    historico.unlink()
+]]>
+        </field>
+    </record>
+
+
+
+    <record forcecreate="True" id="autoazur_confirm_trans_drop_full" model="ir.cron">
+        <field name="name">Confirmar Transferencias de Drop/Full</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_stock_picking"/>
+        <field name="priority">6</field>
+        <field name="state">code</field>
+        <field name="code">
+<![CDATA[
+sale_orders_to_confirm = model.env['stock.picking'].search([
+('state', '=', 'assigned'),
+('x_studio_tipo_de_venta', 'in', ['Drop','Full']),
+('location_id', 'in', [28,36,8]),
+('create_date', '>', '2023-01-30 23:59:59'),
+])
+for order in sale_orders_to_confirm:
+    order.button_validate()
+    # agregar .limit(100) despues de ])
+]]>
+        </field>
+    </record>
+
+
+
+
+
+    <record forcecreate="True" id="autoazur_ult_movs_invent" model="ir.cron">
+        <field name="name">Ultimos movimientos de Inventario</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_stopper_az"/>
+        <field name="priority">5</field>
+        <field name="state">code</field>
+        <field name="code">
+<![CDATA[
+now = datetime.datetime.now()
+
+
+stopper_record = model.env['x_stopper_az'].search([], limit=1)
+if stopper_record: # This is the main 'if' block
+    minutos = stopper_record.x_studio_segundos / 60
+    almacen = stopper_record.x_studio_almacen.id
+    cantidad = stopper_record.x_studio_cantidad_minima
+
+    if stopper_record.x_studio_sincronizar_por == "Almacen":
+        if stopper_record.x_studio_almacenes:
+            almacen = stopper_record.x_studio_almacenes.ids
+
+            minutes_ago = now - datetime.timedelta(minutes=minutos)
+
+            stock_moves = model.env['stock.move.line'].search([
+                ('date', '>=', minutes_ago),
+                '|',  # El operador OR lógico para considerar las ubicaciones de origen o destino
+                ('location_id.warehouse_id', 'in', almacen),  # Movimientos donde la ubicación de origen esté en el almacén
+                ('location_dest_id.warehouse_id', 'in', almacen)  # O donde la ubicación de destino esté en el almacén
+            ])
+    else:
+        if stopper_record.x_studio_ubicaciones:
+            almacen = stopper_record.x_studio_ubicaciones.ids
+
+            minutes_ago = now - datetime.timedelta(minutes=minutos)
+
+            stock_moves = model.env['stock.move.line'].search([
+                ('date', '>=', minutes_ago),
+                '|',  # El operador OR lógico para considerar las ubicaciones de origen o destino
+                ('location_id', 'in', almacen),  # Movimientos donde la ubicación de origen esté en el almacén
+                ('location_dest_id', 'in', almacen)  # O donde la ubicación de destino esté en el almacén
+            ])
+
+    # Buscar todos los movimientos de stock en los últimos 10 minutos
+
+    # Obtener los productos involucrados en los movimientos
+    products_involved = stock_moves.mapped('product_id')
+
+    # Obtener el primer registro del modelo x_stopper_az
+
+
+    #---------------Generar Histórico
+
+
+    historico = model.env['x_historico_stopper'].create({
+            'company_id' : model.env.company.id,
+            'x_studio_stopper' : stopper_record.id, # <-- CHANGE THIS to stopper_record.id
+            'name' : stopper_record.x_name,       # <-- CHANGE THIS to stopper_record.x_name
+    })
+    fecha_actualizacion = datetime.datetime.now() - datetime.timedelta(hours=6)
+    tabla_html = f'''<table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
+    <tr style="background-color: #A3CF95; font-size: 13px;">
+    <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Producto</th>
+    <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">SKU</th>
+        <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Stock</th>
+        <th style="width: 25%; border: 2px solid black; text-align: center; font-weight: bold;">Fecha y Hora: {fecha_actualizacion}</th>
+    </tr>'''
+
+    for line_hist in stopper_record.x_studio_linstopper:
+
+        tabla_html += f'''
+        <tr style="background-color: #DAE1CD;">
+            <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_producto.name}</td>
+            <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_default_code}</td>
+            <td style="border: 1px solid black; font-weight: bold; text-align: center;">{line_hist.x_studio_stock}</td>
+            <td style="border: 1px solid black; font-weight: bold; text-align: center;">{fecha_actualizacion}</td>
+            </tr>
+        '''
+
+
+    historico['x_studio_reporte'] = f'''{historico.x_studio_reporte if historico.x_studio_reporte != False else ''}{tabla_html}</table>'''
+
+
+    #---------------
+    # Limpiar el contenido anterior de x_studio_linstopper
+    stopper_record.x_studio_linstopper.unlink()
+
+    # Preparar las líneas para insertar en el One2many
+    lines = []
+    for product in products_involved:
+
+        stock_quants = model.env['stock.quant'].search([
+            ('product_id', '=', product.id),
+            ('warehouse_id', '=', almacen)  # Filtrar por el almacén y sus ubicaciones hijas
+        ])
+
+        # Sumar todas las cantidades disponibles encontradas en las distintas ubicaciones del almacén
+        stock_qty = sum(stock_quants.mapped('available_quantity'))
+
+        # Verificar si el stock es 0 o no existe en ese almacén
+        if stock_qt <= cantidad:
+            # Crear una línea para el One2many
+            line_vals = {
+                'x_studio_producto': product.id,  # Many2one a product.product
+                'x_studio_stock': stock_qty       # El stock actual (float)
+            }
+            lines.append((0, 0, line_vals))  # Agregar la línea como un nuevo registro
+
+    # Insertar las líneas en el campo One2many del primer registro de x_stopper_az
+    stopper_record['x_studio_linstopper'] = lines
+]]>
+        </field>
+    </record>
+
+    <record forcecreate="True" id="autoazur_del_historico_logs" model="ir.cron">
+        <field name="name">Borrar registros viejos de sincronización de inventario</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">1</field>
+        <field name="interval_type">weeks</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_logsyncinvent"/>
+        <field name="priority">5</field>
+        <field name="state">code</field>
+        <field name="code">
+<![CDATA[
+# Calcular la fecha límite: hoy - 60 días
+hoy = datetime.datetime.today()
+limite = hoy - datetime.timedelta(days=75)
+
+# Buscar hasta 100,000 registros anteriores a esa fecha
+registros = env['x_logsyncinvent'].search([
+    ('create_date', '<', limite)
+], limit=100000)
+
+# Borrar los registros encontrados
+registros.unlink()
+]]>
+        </field>
+    </record>
+
+    
+
+</odoo>

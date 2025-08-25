@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+<record id="productos_stock_nokits" model="ir.actions.server">
+            <field name="name">Agregar productos/stock nokits</field>
+            <field name="model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+for record in records:
+        if record.x_studio_almacen:
+        # Obtener las ubicaciones relacionadas con el almacén
+                location_ids = env['stock.location'].search([
+                ('location_id', 'child_of', [record.x_studio_almacen.view_location_id.id])
+                ]).ids
+                if location_ids:
+                        # Consultar las existencias por producto en esas ubicaciones
+                        query = """
+                        SELECT product_id, sum(quantity) as quantity
+                        FROM stock_quant
+                        WHERE location_id IN %s
+                        GROUP BY product_id
+                        """
+                        env.cr.execute(query, (tuple(location_ids),))
+                        productos = env.cr.fetchall()
+                        # Limpiar los registros existentes en x_studio_inventarios
+                        record.x_studio_inventarios.unlink()
+                        # Crear nuevos registros con las existencias agrupadas por producto
+                        for producto_id, cantidad in productos:
+                                env['x_lininvsync'].create({
+                                'x_studio_inventario_por_ubicacin': record.id,
+                                'x_studio_producto': producto_id,
+                                'x_name': producto_id,
+                                'x_studio_stock': cantidad,
+                                })
+                </field>
+        </record>
+
+
+
+
+        <record id="productos_stock" model="ir.actions.server">
+            <field name="name">Agregar productos/stock kits</field>
+            <field name="model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+for record in records:
+        if record.x_studio_almacen:
+                # Obtener las ubicaciones relacionadas con el almacén
+                location_ids = env['stock.location'].search([
+                ('location_id', 'child_of', [record.x_studio_almacen.view_location_id.id])
+                ]).ids
+                if location_ids:
+                        # Buscar todos los productos, incluidos los kits
+                        products = env['product.product'].search([
+                        ('location_id', 'in', location_ids)
+                        ])
+                        # Limpiar los registros existentes en x_studio_inventarios
+                        record.x_studio_inventarios.unlink()
+                        # Crear nuevos registros con las existencias agrupadas por producto
+                        for product in products:
+                                product_qty = 0 # Inicializar cantidad del producto
+                                if product.bom_ids: # Verificar si el producto tiene una lista de materiales
+                                        # Calcular la existencia del kit basándose en sus componentes
+                                        quantities = []
+                                        for bom_line in product.bom_ids.bom_line_ids:
+                                                component_qty = sum(bom_line.product_id.stock_quant_ids.filtered(
+                                                        lambda q: q.location_id.id in location_ids).mapped('available_quantity'))
+                                                quantities.append(component_qty // bom_line.product_qty if bom_line.product_qty > 0 else 0)
+                                        product_qty = min(quantities) if quantities else 0
+
+                                else:
+                                        product_qty = sum(product.stock_quant_ids.filtered(
+                                        lambda q: q.location_id.id in location_ids).mapped('available_quantity'))
+                                        # Solo crear un registro si la cantidad es mayor que cero
+                                if product_qty > -1:
+                                        env['x_lininvsync'].create({
+                                        'x_studio_inventario_por_ubicacin': record.id,
+                                        'x_studio_producto': product.id,
+                                        'x_name': product.display_name,
+                                        'x_studio_stock': product_qty,
+                                        })
+                </field>
+        </record>
+
+
+
+<record id="sales_buscador_sync" model="ir.actions.server">
+            <field name="name">Ejecutar busqueda sinck</field>
+            <field name="model_id" ref="autoazur.model_x_buscador_sync"/>
+            <field name="binding_model_id" ref="autoazur.model_x_buscador_sync"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+<![CDATA[
+# Verificación de palabra clave
+keyword = record.x_studio_keyword
+if not keyword:
+    record['x_studio_reporte'] = "<p>Por favor ingrese una palabra clave.</p>"
+
+# Calcular fecha límite (últimos 7 días)
+fecha_limite = datetime.datetime.now() - datetime.timedelta(days=7)
+
+# Buscar registros
+matches = env['x_logsyncinvent'].search([
+    ('create_date', '>=', fecha_limite),
+    ('x_name', 'ilike', keyword)
+], order='create_date desc', limit=40)
+
+# Agrupar manualmente por canal
+grupo_por_canal = {}
+
+for r in matches:
+    nombre = r.x_name or ''
+    canal = 'Sin canal'
+    inicio = nombre.find('{')
+    fin = nombre.find('}', inicio)
+    if inicio != -1 and fin != -1:
+        canal = nombre[inicio + 1:fin].strip()
+
+    if canal not in grupo_por_canal:
+        grupo_por_canal[canal] = []
+    grupo_por_canal[canal].append(r)
+
+# Construir el HTML agrupado
+html = ""
+for canal in grupo_por_canal:
+    html += "<h2 style='font-size:22px; margin-top: 20px;'>" + canal + "</h2>"
+    html += """
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Fecha de creación</th>
+          <th>Log</th>
+          <th>Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+    """
+    for r in grupo_por_canal[canal]:
+        log = r.x_studio_log or ''
+        log_preview = log[:200] + '...' if len(log) > 1000 else log
+
+        # Ajustar fecha a -6 horas
+        fecha_hora = r.create_date
+        if fecha_hora:
+            fecha_hora = fecha_hora - datetime.timedelta(hours=6)
+            fecha = fecha_hora.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            fecha = ''
+
+        # Extraer Stock = x
+        stock_valor = ''
+        pos_stock = log.find('Stock =')
+        if pos_stock != -1:
+            resto = log[pos_stock + 7:].strip()
+            stock_valor = resto.split(',')[0].strip()
+        else:
+            stock_valor = 'N/A'
+
+        # Determinar color
+        try:
+            stock_int = int(stock_valor)
+            color = 'darkgreen' if stock_int > 5 else 'darkred'
+        except:
+            color = 'black'
+
+        # Fila HTML con estilo aplicado
+        html += "<tr><td>%s</td><td>%s</td><td>%s</td><td style='font-size: 22px; font-weight: bold; color: %s;'>%s</td></tr>" % (
+            r.x_name or '', fecha, log_preview, color, stock_valor
+        )
+    html += "</tbody></table>"
+
+# Asignar resultado al campo HTML
+record['x_studio_reporte'] = html
+]]>
+                </field>
+        </record>
+
+</odoo>

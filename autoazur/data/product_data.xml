@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="product_product_10f" model="product.product">
+            <field name="default_code">EXP-ENVIO</field>
+            <field name="name">EXP-ENVIO</field>
+            <field name="type">service</field>
+        </record>
+
+    <record id="product_product_11f" model="product.product">
+            <field name="default_code">EXP-COMMKTPL</field>
+            <field name="name">EXP-COMMKTPL</field>
+            <field name="type">service</field>
+        </record>
+</odoo>
