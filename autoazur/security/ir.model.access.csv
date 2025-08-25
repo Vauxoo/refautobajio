@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_autoazur_x_logs_autoazur,autoazur.x_logs_autoazur,model_x_logs_autoazur,base.group_user,1,1,1,1
+autoazur.access_x_configuraciones_auto,access_x_configuraciones_auto,autoazur.model_x_configuraciones_auto,base.group_user,1,1,1,1
+autoazur.access_x_invubisync,access_x_invubisync,autoazur.model_x_invubisync,base.group_user,1,1,1,1
+autoazur.access_x_lineenvcom,access_x_lineenvcom,autoazur.model_x_lineenvcom,base.group_user,1,1,1,1
+autoazur.access_x_lininvsync,access_x_lininvsync,autoazur.model_x_lininvsync,base.group_user,1,1,1,1
+autoazur.access_x_logsyncinvent,access_x_logsyncinvent,autoazur.model_x_logsyncinvent,base.group_user,1,1,1,1
+autoazur.access_x_historico,access_x_historico,autoazur.model_x_historico,base.group_user,1,1,1,1
+autoazur.access_x_stopper_az,access_x_stopper_az,autoazur.model_x_stopper_az,base.group_user,1,1,1,1
+autoazur.access_x_linstopper,access_x_linstopper,autoazur.model_x_linstopper,base.group_user,1,1,1,1
+autoazur.access_x_historico_stopper,access_x_historico_stopper,autoazur.model_x_historico_stopper,base.group_user,1,1,1,1
+autoazur.access_x_reclamos_meli,access_x_reclamos_meli,autoazur.model_x_reclamos_meli,base.group_user,1,1,1,1
+autoazur.access_x_buscador_sync,access_x_buscador_sync,autoazur.model_x_buscador_sync,base.group_user,1,1,1,1

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_x_stopper_az_form" model="ir.ui.view">
+        <field name="name">x_stopper_az.form</field>
+        <field name="model">x_stopper_az</field>
+        <field name="arch" type="xml">
+            <form string="Stopper AZ" class="o_x_stopper_az" create='False'>
+            <header>
+            
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <h1>
+                        <field name="x_name" readonly="1"/>
+                    </h1>
+                </div>
+                <group name="x_stopper_az">
+                    <group name="left">
+                    <field name="x_studio_segundos"/>
+                        <field name="x_studio_sincronizacion_de_inventario"/>
+                        <field name="x_studio_sincronizar_por"/>
+                        <field name="x_studio_almacenes" widget="many2many_tags" invisible="x_studio_sincronizar_por != &quot;Almacen&quot;"/>
+                        <field name="x_studio_ubicaciones" widget="many2many_tags" invisible="x_studio_sincronizar_por != &quot;Ubicacion&quot;"/>
+                    </group>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="x_studio_azaccountid"/>
+                        <field name="x_studio_cantidad_minima"/>
+                    </group>
+                    
+                </group>
+                <notebook name="notebook_stopper_az">
+                    <page string="Productos" name="studio_page_483">
+                        <group name="studio_group_1">
+                        <group name="studio_group_1_left"/>
+                        <group name="studio_group_1_right"/>
+
+                        <field name="x_studio_linstopper" force_save="1" readonly="True">
+                        <tree>
+                            <field name="x_studio_sequence" widget="handle"/>
+                            <field name="x_name"/>
+                            <field optional="show" name="x_studio_producto"/>
+                            <field optional="show" name="x_studio_default_code"/>
+                            <field optional="show" name="x_studio_barcode"/>
+                            <field optional="show" name="x_studio_cdb"/>
+                            <field optional="show" name="x_studio_cdb2"/>
+                            <field optional="show" name="x_studio_stock"/>
+                            <field optional="show" name="x_studio_azaccountid"/>
+                            <field name="create_uid" optional="show"/>
+                            <field name="create_date" optional="show"/>
+                        </tree>
+                        </field>
+                        </group>
+                    </page>
+                    <page string="Log" name="studio_page_2">
+                        <group name="studio_group_2">
+                        <group name="studio_group_2_left"/>
+                        <group name="studio_group_2_right"/>
+                        </group>
+                    </page>
+                </notebook>
+            </sheet>
+            
+            </form>
+        </field>
+    </record>
+
+    <record id="x_stopper_az_tree" model="ir.ui.view">
+        <field name="name">x_stopper_az.tree</field>
+        <field name="model">x_stopper_az</field>
+        <field name="priority">1000</field>
+        <field name="arch" type="xml">
+            <tree class="o_autoazur_x_stopper_az"
+                  string="Stopper AZ"
+                  sample="1"
+                  create="False"
+                  default_order="create_date desc"
+                  >
+                <header>
+                </header>
+                <field name="x_name" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+
+
+
+<record id="action_x_stopper_az" model="ir.actions.act_window">
+        <field name="name">Stopper AZ</field>
+        <field name="res_model">x_stopper_az</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Stopper AZ
+          </p><p>
+            
+          </p>
+        </field>
+    </record>
+
+    <record id="action_x_stopper_az_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="autoazur.x_stopper_az_tree"/>
+        <field name="act_window_id" ref="action_x_stopper_az"/>
+    </record>
+    <record id="action_x_stopper_az_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="autoazur.view_x_stopper_az_form"/>
+        <field name="act_window_id" ref="action_x_stopper_az"/>
+    </record> 
+
+
+    <menuitem id="autoazur_menu_x_stopper_az"
+        name="Stopper AZ"
+        action="action_x_stopper_az"
+        parent="menu_autoazur"
+        sequence="70"/>
+
+
+<!--Historico Stopper Views-->
+
+<record id="view_x_historico_stopper_form" model="ir.ui.view">
+        <field name="name">x_historico_stopper.form</field>
+        <field name="model">x_historico_stopper</field>
+        <field name="arch" type="xml">
+            <form string="Histórico Stopper" class="o_x_historico_stopper" create='False'>
+            <header>
+            
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <h1>
+                        <field name="name" readonly="1"/>
+                    </h1>
+                </div>
+                <group name="x_historico_stopper">
+                    <group name="left">
+                    <field name="x_studio_stopper"/>
+                    </group>
+                    <group>
+                        <field name="company_id"/>
+                    </group>
+                    
+                </group>
+                <notebook name="notebook_stopper_az">
+                    <page string="Reporte" name="studio_page_483">
+                        <group name="studio_group_1">
+                        <group name="studio_group_1_left"/>
+                        <group name="studio_group_1_right"/>
+
+                        <field name="x_studio_reporte" readonly="True">
+                        
+                        </field>
+                        </group>
+                    </page>
+                </notebook>
+            </sheet>
+            
+            </form>
+        </field>
+    </record>
+
+    <record id="x_historico_stopper_tree" model="ir.ui.view">
+        <field name="name">x_historico_stopper.tree</field>
+        <field name="model">x_historico_stopper</field>
+        <field name="priority">1000</field>
+        <field name="arch" type="xml">
+            <tree class="o_autoazur_x_historico_stopper"
+                  string="Histórico Stopper"
+                  sample="1"
+                  create="False"
+                  default_order="create_date desc"
+                  >
+                <header>
+                </header>
+                <field name="name" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+
+
+
+<record id="action_x_historico_stopper" model="ir.actions.act_window">
+        <field name="name">Histórico Stopper</field>
+        <field name="res_model">x_historico_stopper</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Histórico Stopper
+          </p><p>
+            
+          </p>
+        </field>
+    </record>
+
+    <record id="action_x_historico_stopper_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="autoazur.x_historico_stopper_tree"/>
+        <field name="act_window_id" ref="action_x_historico_stopper"/>
+    </record>
+    <record id="action_x_historico_stopper_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="autoazur.view_x_historico_stopper_form"/>
+        <field name="act_window_id" ref="action_x_historico_stopper"/>
+    </record> 
+
+
+    <menuitem id="autoazur_menu_x_historico_stopper"
+        name="Histórico Stopper"
+        action="action_x_historico_stopper"
+        parent="menu_autoazur"
+        sequence="80"/>
+
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_team_custom_view_form" model="ir.ui.view">
+        <field name="name">crm.team.form_custom</field>
+        <field name="model">crm.team</field>
+        <field name="inherit_id" ref="sales_team.crm_team_view_form"/>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='currency_id']" position="after">
+                <field name="x_studio_cdigo"/>
+                <field name="x_studio_inventario_sync"/>
+                <field name="x_studio_id_az"/>
+                <field name="x_studio_almacn_drop"/>
+                <field name="x_studio_almacn_full"/>
+                <field name="x_studio_channelid"/>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

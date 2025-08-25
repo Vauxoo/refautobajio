@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="x_stopper_az_1" model="x_stopper_az">
+            <field name="x_name">STOPPER AZ</field>
+        </record>
+
+    <record id="x_buscador_sync_1" model="x_buscador_sync">
+            <field name="x_name">Buscador de sincronizaciones</field>
+        </record>
+</odoo>
