@@ -16,6 +16,6 @@ class Picking(models.Model):
                 record.x_studio_orden_de_venta = False
             else:
                 #raise UserError("Aqui")
-                registro_encontrado = self.env['sale.order'].search([('name', '=', record.group_id.name)])
+                registro_encontrado = self.env['sale.order'].search([('name', '=', record.group_id.name)],limit=1)
                 if registro_encontrado:
                     record.x_studio_orden_de_venta = registro_encontrado.id
