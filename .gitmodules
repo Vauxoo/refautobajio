@@ -10,3 +10,19 @@
 	path = brand
 	url = git@github.com:Vauxoo/brand.git
 	branch = 17.0
+[submodule "mexico-document"]
+	path = mexico-document
+	url = git@git.vauxoo.com:vauxoo/mexico-document.git
+	branch = 17.0
+[submodule "l10n-mx-edi-hr-expense"]
+	path = l10n-mx-edi-hr-expense
+	url = git@git.vauxoo.com:mexico/l10n-mx-edi-hr-expense.git
+	branch = 17.0
+[submodule "l10n-edi-hr-expense"]
+	path = l10n-edi-hr-expense
+	url = git@git.vauxoo.com:vauxoo/l10n-edi-hr-expense.git
+	branch = 17.0
+[submodule "edi-document"]
+	path = edi-document
+	url = git@git.vauxoo.com:vauxoo/edi-document.git
+	branch = 17.0
