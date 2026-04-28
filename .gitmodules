@@ -26,3 +26,7 @@
 	path = edi-document
 	url = git@git.vauxoo.com:vauxoo/edi-document.git
 	branch = 17.0
+[submodule "stock-logistics-workflow"]
+	path = stock-logistics-workflow
+	url = git@github.com:Vauxoo/stock-logistics-workflow.git
+	branch = 17.0
