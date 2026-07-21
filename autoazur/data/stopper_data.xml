@@ -8,4 +8,8 @@
     <record id="x_buscador_sync_1" model="x_buscador_sync">
             <field name="x_name">Buscador de sincronizaciones</field>
         </record>
+
+    <record id="x_x_rep_utilidad_1" model="x_rep_utilidad">
+            <field name="x_name">Reporte de Utilidad AZ</field>
+        </record>
 </odoo>

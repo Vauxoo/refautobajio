@@ -16,7 +16,7 @@
     # Check https://github.com/odoo/odoo/blob/master/odoo/addons/base/module/module_data.xml
     # for the full list
     'category': 'Uncategorized',
-    'version': '1.0',
+    'version': '1.16',
 
     # any module necessary for this one to work correctly
     'depends': ['base','sale','sale_management','sales_team','product','stock','base_automation','crm','mrp'],
