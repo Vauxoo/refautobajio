@@ -183,7 +183,7 @@ record['x_studio_reporte'] = html
 
 <record id="productos_sincronizar_productos" model="ir.actions.server">
             <field name="name">Sincronizar Producto</field>
-            <field name="model_id" ref="base.model_product_product"/>
+            <field name="model_id" ref="product.model_product_product"/>
             <field name="state">webhook</field>
             <field name="webhook_url">https://mkt-odoo-functions.azurewebsites.net/api/WHK_ODOO_ForceStock?</field>
             <field name="webhook_field_ids" eval="[(6, 0, [ref('autoazur.field_product_product__x_studio_azaccountid'),ref('autoazur.field_product_product__x_studio_default_code'),ref('autoazur.field_product_product__x_studio_stock'),ref('autoazur.field_product_product__x_studio_double_validation')])]"></field>
@@ -518,7 +518,7 @@ else:
 
     <record id="actualizar_precios_autoazur" model="ir.actions.server">
             <field name="name">Actualizar Precios Autoazur</field>
-            <field name="model_id" ref="model_product_pricelist"/>
+            <field name="model_id" ref="product.model_product_pricelist"/>
 
             <field name="binding_view_types">form</field>
             <field name="state">code</field>
@@ -580,7 +580,7 @@ for pricelist in pricelists:
 
     <record id="analisis_de_margen_server" model="ir.actions.server">
             <field name="name">Análisis de márgen</field>
-            <field name="model_id" ref="model_sale_order"/>
+            <field name="model_id" ref="sale.model_sale_order"/>
 
             <field name="binding_view_types">form</field>
             <field name="state">code</field>
