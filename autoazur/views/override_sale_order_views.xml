@@ -11,11 +11,18 @@
                 <page string="Autoazur" name="autoazur">
                         <group>
                             <group>
+                            <field name="x_studio_folio_az"/>
                             <field name="x_studio_tipo_de_venta"/>
                             <field name="x_studio_url_gua"/>
                             <field name="x_studio_mktcode"/>
                             <field name="x_studio_status"/>
                             <field name="x_studio_no_guia"/>
+                            <!-- El campo invisible del nombre -->
+                            <field name="x_studio_xml_filename" invisible="1"/>
+                            <!-- El campo de archivo, enlazado al campo del nombre -->
+                            <field name="x_studio_xml" widget="file" filename="x_studio_xml_filename"/>>
+                            <field name="x_studio_fecha_entrega"/>
+                                <field name="x_studio_ubicacion_mkt"/>
                         </group>
                         <group>
                             <field name="user_id"/>
@@ -42,8 +49,8 @@
 
 
             <xpath expr="//field[@name='partner_id']" position="after">
-                            <field name="x_studio_volumen_total"/>
-                            <field name="x_studio_conteo"/>
+
+                <field name="x_studio_analisis_de_margen" groups="base.group_system"/>
             </xpath>
 
             <xpath expr="//field[@name='payment_term_id']" position="after">
@@ -52,9 +59,7 @@
 
             </xpath>
 
-            <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='order_lines']/field[@name='order_line']/tree[1]/field[@name='product_uom_qty']" position="after">
-                <field optional="show" name="x_studio_volumen"/>
-            </xpath>
+
 
             <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='order_lines']/field[@name='order_line']/tree[1]/field[@name='name']" position="after">
                 <field optional="show" name="x_studio_orderid"/>
@@ -83,10 +88,26 @@
         <field name="type">tree</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='product_uom_qty']" position="after">
-                            <field name="x_studio_volumen" optional="show"/>
                             <field name="x_studio_tipo_de_venta_lineas" optional="show"/>
 
             </xpath>
+        </field>
+    </record>
+
+    <record id="product_pricelist_custom_view_form" model="ir.ui.view">
+        <field name="name">product.pricelist.form_custom</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view" />
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='active']" position="after">
+                            <field name="x_studio_canales" optional="show" widget="many2many_tags"/>
+                            <field name="x_studio_az_sync" optional="show"/>
+
+            </xpath>
+
+
+
         </field>
     </record>
 </odoo>

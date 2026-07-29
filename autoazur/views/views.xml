@@ -22,6 +22,8 @@
                     <group>
                         <field name="x_studio_actualizar" invisible="1"/>
                         <field name="x_studio_cdigo"/>
+                        <field name="x_studio_codigo_log"/>
+                        <field name="x_studio_status"/>
                     </group>
                     
                 </group>
@@ -122,10 +124,7 @@
                         <field name="x_studio_sales_team"/>
                     </group>
                     <group string="LOGÍSTICA">
-                        <field name="x_studio_almacn_drop"/>
-                        <field name="x_studio_id_drop"/>
-                        <field name="x_studio_almacn_full"/>
-                        <field name="x_studio_id_full"/>
+
                         <field name="x_studio_zaccountid"/>
                     </group>
                     
@@ -301,6 +300,8 @@
                     </group>
                     <group>
                         <field name="x_studio_cantidad_minima"/>
+                        <field name="x_studio_azaccountid"/>
+                        <field name="x_studio_azwarehouseid"/>
                         
                     </group>
                     
@@ -314,7 +315,6 @@
                         <field name="x_studio_cdb2" optional="show"/>
                         <field name="x_studio_cdigo_de_barras" optional="show"/>
                         <field name="x_studio_stock" optional="show"/>
-                        <field name="x_studio_lnea_de_stock" optional="show"/>
                         <field optional="show" name="x_studio_inventario_por_ubicacin"/>
                     </tree>
                 </field>
@@ -634,4 +634,194 @@
         action="action_x_buscador_sync"
         parent="menu_autoazur"
         sequence="90"/>
+
+
+    <!--Vistas Reporte Utilidad-->
+
+<record id="view_x_reporte_utilidad_form" model="ir.ui.view">
+        <field name="name">x_rep_utilidad.form</field>
+        <field name="model">x_rep_utilidad</field>
+        <field name="arch" type="xml">
+            <form string="Reporte Utilidad" class="o_x_reporte_utilidad" create="False">
+            <header>
+
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <h1>
+                        <field name="x_name" readonly="1"/>
+                    </h1>
+                </div>
+                <group name="x_reporte_utilidad">
+                    <group name="x_reporte_utilidad_details">
+                        <field name="x_studio_fecha_inicio"/>
+                        <field name="x_studio_fecha_final"/>
+                    </group>
+                    <group>
+                        <field name="x_studio_canales" widget="many2many_tags"/>
+                        <field name="x_studio_mostrar_detalle"/>
+                    </group>
+                </group>
+                <field name="x_studio_reporte"/>
+            </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="x_rep_utilidad_tree" model="ir.ui.view">
+        <field name="name">x_rep_utilidad.tree</field>
+        <field name="model">x_rep_utilidad</field>
+        <field name="priority">1000</field>
+        <field name="arch" type="xml">
+            <tree class="o_autoazur_x_rep_utilidad"
+                  string="Reporte Utilidad"
+                  sample="1"
+                  create="False"
+                  default_order="create_date desc"
+                  >
+                <header>
+                </header>
+
+                <field name="x_name" optional="show"/>
+                <field name="x_studio_fecha_inicio" optional="show"/>
+                <field name="x_studio_fecha_final" optional="show"/>
+                <field name="x_studio_canales" optional="show" widget="many2many_tags"/>
+                <field name="create_date" optional="show"/>
+
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_x_rep_utilidad" model="ir.actions.act_window">
+        <field name="name">Reporte Utilidad</field>
+        <field name="res_model">x_rep_utilidad</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Create and Consult Reporte Utilidad
+          </p><p>
+            </p>
+        </field>
+    </record>
+
+    <record id="action_x_rep_utilidad_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="autoazur.x_rep_utilidad_tree"/>
+        <field name="act_window_id" ref="action_x_rep_utilidad"/>
+    </record>
+    <record id="action_x_rep_utilidad_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="autoazur.view_x_reporte_utilidad_form"/>
+        <field name="act_window_id" ref="action_x_rep_utilidad"/>
+    </record>
+
+    <menuitem id="autoazur_menu_x_rep_utilidad"
+        name="Reporte Utilidad"
+        action="action_x_rep_utilidad"
+        parent="menu_autoazur"
+        sequence="110"/>
+
+
+    <!--Vistas AZ Price-->
+
+<record id="view_x_az_prices_form" model="ir.ui.view">
+        <field name="name">x_az_prices.form</field>
+        <field name="model">x_az_prices</field>
+        <field name="arch" type="xml">
+            <form string="AZ Prices" class="o_x_az_prices" create="False">
+            <header>
+
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <h1>
+                        <field name="x_name" readonly="1"/>
+                    </h1>
+                </div>
+                <group name="x_az_prices">
+                    <group name="x_az_prices_details">
+                        <field name="x_studio_producto"/>
+                        <field name="x_studio_cdb"/>
+                        <field name="x_studio_cdb2"/>
+                        <field name="x_studio_barcode"/>
+                    </group>
+                    <group>
+                        <field name="x_studio_precio"/>
+                        <field name="x_studio_canal"/>
+                        <field name="x_studio_id_az"/>
+                        <field name="x_studio_pricelist"/>
+                        <field name="x_studio_az_sync"/>
+                        <field name="x_studio_id_cliente_az"/>
+                    </group>
+                </group>
+
+            </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="x_az_prices_tree" model="ir.ui.view">
+        <field name="name">x_az_prices.tree</field>
+        <field name="model">x_az_prices</field>
+        <field name="priority">1000</field>
+        <field name="arch" type="xml">
+            <tree class="o_autoazur_x_az_prices"
+                  string="AZ Prices"
+                  sample="1"
+                  create="False"
+                  default_order="create_date desc"
+                  >
+                <header>
+                </header>
+
+                <field name="x_name" optional="show" string="SKU"/>
+                <field name="x_studio_producto" optional="show"/>
+                <field name="x_studio_barcode" optional="show"/>
+                <field name="x_studio_cdb" optional="show"/>
+                <field name="x_studio_cdb2" optional="show"/>
+                <field name="x_studio_precio" optional="show"/>
+                <field name="x_studio_canal" optional="show"/>
+                <field name="x_studio_id_az" optional="show"/>
+                <field name="x_studio_pricelist" optional="show"/>
+                <field name="x_studio_az_sync" optional="show"/>
+                <field name="x_studio_id_cliente_az" optional="show"/>
+
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_x_az_prices" model="ir.actions.act_window">
+        <field name="name">AZ Prices</field>
+        <field name="res_model">x_az_prices</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Create and Consult AZ Prices
+          </p><p>
+            </p>
+        </field>
+    </record>
+
+    <record id="action_x_az_prices_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="autoazur.x_az_prices_tree"/>
+        <field name="act_window_id" ref="action_x_az_prices"/>
+    </record>
+    <record id="action_x_az_prices_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="autoazur.view_x_az_prices_form"/>
+        <field name="act_window_id" ref="action_x_az_prices"/>
+    </record>
+
+    <menuitem id="autoazur_menu_x_az_prices"
+        name="AZ Prices"
+        action="action_x_az_prices"
+        parent="menu_autoazur"
+        sequence="120"/>
+
+
 </odoo>

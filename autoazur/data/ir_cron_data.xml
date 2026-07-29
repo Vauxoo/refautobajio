@@ -9,7 +9,13 @@
         <field name="model_id" ref="model_sale_order"/>
         <field name="priority">5</field>
         <field name="state">code</field>
-        <field name="code">sale_orders_to_confirm = model.env['sale.order'].search([('state', '=', 'draft'),('x_studio_tipo_de_venta', '=', 'Drop'),('x_studio_status', '=', 'Vigente'),('create_date', '>', '2023-01-30 23:59:59')])
+        <field name="code">sale_orders_to_confirm = model.env['sale.order'].search([
+            ('state', '=', 'draft'),
+            ('x_studio_tipo_de_venta', '=', 'Drop'),
+            ('x_studio_status', 'in', ['Vigente']),
+            ('create_date', '>', '2023-01-30 23:59:59'),
+            ('order_line', '!=', False),  # Solo órdenes con al menos una línea
+            ])
 for order in sale_orders_to_confirm:
     order.action_confirm()
         </field>
@@ -30,6 +36,7 @@ sale_orders_to_confirm = model.env['sale.order'].search([
             ('state', '=', 'draft'),
             ('x_studio_tipo_de_venta', '=', 'Full'),
             ('create_date', '>', '2023-01-30 00:59:59'),
+            ('order_line', '!=', False),  # Solo órdenes con al menos una línea
             ])
 for order in sale_orders_to_confirm:
     order['state'] = 'sale'
@@ -252,13 +259,21 @@ for record in invubisync_records:
                     lambda q: q.location_id.id in location_ids).mapped('available_quantity'))
                     # Asegurarse de que la cantidad no sea negativa
                 product_qty = max(product_qty, 0)
-                if product_qty > cantidad:
+                if product_qty >= cantidad:
                     # Crear el registro en x_lininvsync solo si ha habido movimientos recientes
                     env['x_lininvsync'].create({
                     'x_studio_inventario_por_ubicacin': record.id,
                     'x_studio_producto': product.id,
                     'x_name': product.display_name,
                     'x_studio_stock': product_qty,
+                    })
+                else:
+                    # Crear el registro en x_lininvsync solo si ha habido movimientos recientes
+                    env['x_lininvsync'].create({
+                    'x_studio_inventario_por_ubicacin': record.id,
+                    'x_studio_producto': product.id,
+                    'x_name': product.display_name,
+                    'x_studio_stock': 0,
                     })
 ]]>
         </field>
@@ -407,26 +422,91 @@ if stopper_record: # This is the main 'if' block
 
     # Preparar las líneas para insertar en el One2many
     lines = []
+    zero_stock_products = []  # Lista para almacenar productos con stock bajo
+
+    # Para almacenes, necesitamos obtener todas las ubicaciones del almacén
+    location_domain = []
+    if stopper_record.x_studio_sincronizar_por == "Almacen":
+        warehouses = model.env['stock.warehouse'].browse(almacen)
+        all_locations = []
+        for warehouse in warehouses:
+            # Obtener todas las ubicaciones del almacén (incluyendo las hijas)
+            all_locations.extend(warehouse.view_location_id.ids)
+        location_domain = [('location_id', 'child_of', all_locations)]
+    else:
+        location_domain = [('location_id', 'child_of', almacen)]
+
+    # Verificar cada producto movido recientemente para stock bajo
     for product in products_involved:
-
+        # Filtrar por ubicaciones según el tipo de sincronización
         stock_quants = model.env['stock.quant'].search([
-            ('product_id', '=', product.id),
-            ('warehouse_id', '=', almacen)  # Filtrar por el almacén y sus ubicaciones hijas
-        ])
+            ('product_id', '=', product.id)
+        ] + location_domain)
 
-        # Sumar todas las cantidades disponibles encontradas en las distintas ubicaciones del almacén
+        # Sumar todas las cantidades disponibles encontradas
         stock_qty = sum(stock_quants.mapped('available_quantity'))
 
-        # Verificar si el stock es 0 o no existe en ese almacén
-        if stock_qt <= cantidad:
-            # Crear una línea para el One2many
+        # Verificar si el stock es menor o igual a la cantidad mínima
+        if stock_qty <= cantidad:
+            # Crear una línea para el producto con stock bajo
             line_vals = {
-                'x_studio_producto': product.id,  # Many2one a product.product
-                'x_studio_stock': stock_qty       # El stock actual (float)
+                'x_studio_producto': product.id,
+                'x_studio_stock': stock_qty
             }
-            lines.append((0, 0, line_vals))  # Agregar la línea como un nuevo registro
+            lines.append((0, 0, line_vals))
+            zero_stock_products.append(product.id)
 
-    # Insertar las líneas en el campo One2many del primer registro de x_stopper_az
+    #### Esta Seccion es para sincornizar kits podemos quitarla si no es necesario
+    # Buscar kits (productos tipo "kit" en las BoM) que incluyen productos con stock bajo
+    kits = model.env['mrp.bom'].search([
+        ('bom_line_ids.product_id', 'in', zero_stock_products),
+        ('type', '=', 'phantom')
+    ])
+
+    # Para cada kit, calcular cuántos se pueden armar con los componentes disponibles
+    for kit in kits.mapped('product_tmpl_id.product_variant_id'):
+        bom = model.env['mrp.bom'].search([
+            ('product_tmpl_id', '=', kit.product_tmpl_id.id),
+            ('type', '=', 'phantom')
+        ], limit=1)
+
+        if not bom:
+            continue
+
+        # Calcular cuántos kits se pueden armar
+        min_kits_possible = float('inf')  # Inicializar con infinito
+
+        for line in bom.bom_line_ids:
+            # Obtener el stock disponible del componente
+            component_quants = model.env['stock.quant'].search([
+                ('product_id', '=', line.product_id.id)
+            ] + location_domain)
+
+            component_stock = sum(component_quants.mapped('available_quantity'))
+
+            # Calcular cuántos kits se pueden hacer con este componente
+            # line.product_qty es la cantidad del componente necesaria por kit
+            kits_from_component = component_stock / line.product_qty if line.product_qty > 0 else float('inf')
+
+            # Tomar el mínimo entre todos los componentes
+            min_kits_possible = min(min_kits_possible, kits_from_component)
+
+        # Si min_kits_possible es infinito (ningún componente tenía cantidad definida)
+        if min_kits_possible == float('inf'):
+            min_kits_possible = 0
+
+        # Redondear hacia abajo para obtener el número entero de kits posibles
+        kits_possible = int(min_kits_possible)
+
+        # Verificar si los kits posibles son menores o iguales a la cantidad mínima
+        if kits_possible <= cantidad:
+            line_vals = {
+                'x_studio_producto': kit.id,
+                'x_studio_stock': kits_possible
+            }
+            lines.append((0, 0, line_vals))
+
+    # Insertar todas las líneas en el campo One2many del registro de x_stopper_az
     stopper_record['x_studio_linstopper'] = lines
 ]]>
         </field>
@@ -454,6 +534,22 @@ registros = env['x_logsyncinvent'].search([
 
 # Borrar los registros encontrados
 registros.unlink()
+]]>
+        </field>
+    </record>
+
+    <record forcecreate="True" id="autoazur_eliminar_pricelis" model="ir.cron">
+        <field name="name">Eliminar Az Lis Price</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="model_id" ref="model_x_az_prices"/>
+        <field name="priority">5</field>
+        <field name="state">code</field>
+        <field name="code">
+<![CDATA[# 1. Limpiar registros existentes
+env['x_az_prices'].search([]).unlink()
 ]]>
         </field>
     </record>

@@ -11,3 +11,5 @@ autoazur.access_x_linstopper,access_x_linstopper,autoazur.model_x_linstopper,bas
 autoazur.access_x_historico_stopper,access_x_historico_stopper,autoazur.model_x_historico_stopper,base.group_user,1,1,1,1
 autoazur.access_x_reclamos_meli,access_x_reclamos_meli,autoazur.model_x_reclamos_meli,base.group_user,1,1,1,1
 autoazur.access_x_buscador_sync,access_x_buscador_sync,autoazur.model_x_buscador_sync,base.group_user,1,1,1,1
+autoazur.access_x_rep_utilidad,access_x_rep_utilidad,autoazur.model_x_rep_utilidad,base.group_user,1,1,1,1
+autoazur.access_x_az_prices,access_x_az_prices,autoazur.model_x_az_prices,base.group_user,1,1,1,1
