@@ -126,6 +126,9 @@
                     <group string="LOGÍSTICA">
 
                         <field name="x_studio_zaccountid"/>
+                            <field name="x_studio_endpoint"/>
+                        <field name="x_studio_model" invisible="1"/>
+                        <field name="x_studio_source" invisible="1"/>
                     </group>
                     
                 </group>
@@ -294,6 +297,7 @@
                 <group name="x_invubisync">
                     <group name="x_invubisync_details">
                         <!--<field name="x_studio_almacen"/>-->
+                        <field name="x_studio_tipo_de_almacen"/>
                         <field name="x_studio_sincronizar_por"/>
                         <field name="x_studio_almacenes" widget="many2many_tags" invisible="x_studio_sincronizar_por != &quot;Almacen&quot;"/>
                         <field name="x_studio_ubicaciones" widget="many2many_tags" invisible="x_studio_sincronizar_por != &quot;Ubicacion&quot;"/>
@@ -305,6 +309,25 @@
                         
                     </group>
                     
+                </group>
+                <group name="x_invubisync_multialmacen" invisible="x_studio_tipo_de_almacen  != &quot;Multialmacen&quot;">
+                    <group name="x_invubisync_details_multialmacen" string="Informacion Multialmacen">
+                        <field name="x_studio_context" invisible="1"/>
+                        <field name="x_studio_source" invisible="1"/>
+                        <field name="x_studio_source_syncwarehouse" invisible="1"/>
+                        <field name="x_studio_calle"/>
+                        <field name="x_studio_numero"/>
+                        <field name="x_studio_colonia"/>
+                        <field name="x_studio_zip"/>
+                        <field name="x_studio_ciudad"/>
+                        <field name="x_studio_estado"/>
+                        <field name="x_studio_pais"/>
+                    </group>
+                    <group>
+
+
+                    </group>
+
                 </group>
                 <field name="x_studio_inventarios">
                     <tree>
