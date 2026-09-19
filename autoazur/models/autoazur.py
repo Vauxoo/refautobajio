@@ -11,6 +11,34 @@ class ConfiguracionesAuto(models.Model):
 
     x_studio_company_id = fields.Many2one('res.company', string="Empresa", store=True)  # Coment
     x_studio_zaccountid = fields.Char(string='ID Cuenta de Autoazur', store=True)
+    x_studio_endpoint = fields.Selection([
+        ('Productos', 'Productos'),
+        ('CRM', 'CRM')],
+        string="Endpoint", default=False, store=True,
+    )
+    x_studio_model = fields.Char(string="Model",store=True,compute="_compute_model")
+    x_studio_source = fields.Char(string="Source", store=True, compute="_compute_source")
+
+    @api.depends('x_studio_endpoint')
+    def _compute_model(self):
+        for record in self:
+            if record.x_studio_endpoint == 'CRM':
+                record['x_studio_model'] = 'crm.team'
+            elif record.x_studio_endpoint == 'Productos':
+                record['x_studio_model'] = 'product.product'
+            else:
+                record['x_studio_model'] = ''
+
+    @api.depends('x_studio_endpoint')
+    def _compute_source(self):
+        for record in self:
+            if record.x_studio_endpoint == 'CRM':
+                record['x_studio_source'] = 'Millora – Cuentas'
+            elif record.x_studio_endpoint == 'Productos':
+                record['x_studio_source'] = 'Millora - Productos'
+            else:
+                record['x_studio_source'] = ''
+    
 
 
 class LogsAutoazur(models.Model):
