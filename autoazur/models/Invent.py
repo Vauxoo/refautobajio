@@ -31,6 +31,21 @@ class Invubisync(models.Model):
     x_studio_cantidad_minima =  fields.Integer(string='Cantidad Minima')
     x_studio_azaccountid = fields.Char(string='Azaccountid',store=True,compute='_compute_azaccount')
     x_studio_azwarehouseid = fields.Integer(string='Azwarehouseid',related='id')
+    x_studio_tipo_de_almacen = fields.Selection([
+        ('Principal ', 'Principal '),
+        ('Multialmacen', 'Multialmacen')],
+        string="Tipo de Almacen", default=False, store=True,
+    )
+    x_studio_context = fields.Char(string='Context',store=True,compute='_compute_context')
+    x_studio_source = fields.Char(string='Source',store=True,compute='_compute_source')
+    x_studio_source_syncwarehouse = fields.Char(string='Source Syncwarehouse', store=True, compute='_compute_source_syncwarehouse')
+    x_studio_calle = fields.Char(string='Calle',store=True)
+    x_studio_numero = fields.Char(string='Numero', store=True)
+    x_studio_colonia = fields.Char(string='Colonia', store=True)
+    x_studio_zip = fields.Char(string='Zip', store=True)
+    x_studio_ciudad = fields.Char(string='Ciudad', store=True)
+    x_studio_estado = fields.Char(string='Estado', store=True)
+    x_studio_pais = fields.Char(string='Pais', store=True)
 
     @api.depends('x_studio_sincronizar_por')
     def _compute_azaccount(self):
@@ -40,6 +55,21 @@ class Invubisync(models.Model):
                 record['x_studio_azaccountid'] = cuentaaz.x_studio_zaccountid
             else:
                 record['x_studio_azaccountid'] = False
+
+    @api.depends('x_studio_tipo_de_almacen')
+    def _compute_context(self):
+        for record in self:
+            record['x_studio_context'] = 'ODOO'
+
+    @api.depends('x_studio_tipo_de_almacen')
+    def _compute_source(self):
+        for record in self:
+            record['x_studio_source'] = 'Millora – Crear Almacén'
+
+    @api.depends('x_studio_tipo_de_almacen')
+    def _compute_source_syncwarehouse(self):
+        for record in self:
+            record['x_studio_source'] = 'Millora – Crear Almacén'
 
 
 class lininvsync(models.Model):
