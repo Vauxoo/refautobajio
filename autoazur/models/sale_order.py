@@ -27,6 +27,11 @@ class SaleOrder(models.Model):
     x_studio_fecha_entrega = fields.Date(string="Fecha de entrega", store=True)
     x_studio_ubicacion_mkt = fields.Char(string="Ubicación Mkt", store=True)
     x_studio_folio_az = fields.Char(string="Folio AZ", store=True)
+    x_studio_guia_zpl = fields.Char(string="Guia ZPL", store=True)
+    x_studio_pedido_completo = fields.Boolean(string="Pedido Completo", store=True)
+    x_studio_azaccountid = fields.Char(string='Azaccountid', store=True, compute='_compute_azaccount')
+    x_studio_context = fields.Char(string='Context', store=True, compute='_compute_context')
+    x_studio_source = fields.Char(string='Source', store=True, compute='_compute_source')
 
 
 
@@ -39,6 +44,25 @@ class SaleOrder(models.Model):
                 record['x_studio_reclamos_meli'] = cuentaaz.id
             else:
                 record['x_studio_reclamos_meli'] = False
+
+    @api.depends('x_studio_tipo_de_venta','x_studio_folio_az')
+    def _compute_azaccount(self):
+        for record in self:
+            cuentaaz = self.env['x_configuraciones_auto'].search([], limit=1)
+            if cuentaaz:
+                record['x_studio_azaccountid'] = cuentaaz.x_studio_zaccountid
+            else:
+                record['x_studio_azaccountid'] = False
+
+    @api.depends('x_studio_tipo_de_venta','x_studio_folio_az')
+    def _compute_context(self):
+        for record in self:
+            record['x_studio_context'] = 'ODOO'
+
+    @api.depends('x_studio_tipo_de_venta','x_studio_folio_az')
+    def _compute_source(self):
+        for record in self:
+            record['x_studio_source'] = 'Millora – Pedidos'
 
 
 class SaleOrderLine(models.Model):
