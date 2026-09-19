@@ -676,4 +676,74 @@ for record in records:
                 </field>
 
         </record>
+
+<record id="config_savedata_endpoint_az" model="ir.actions.server">
+            <field name="name">WHK_AZConfig_SaveData : Endpoint</field>
+            <field name="model_id" ref="model_x_configuraciones_auto"/>
+            <field name="binding_model_id" ref="autoazur.model_x_configuraciones_auto"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">webhook</field>
+            <field name="webhook_url">https://az-plugins-functions-bsgzhygmbrakafcn.southcentralus-01.azurewebsites.net/api/WHK_AZConfig_SaveData?code=0okvlxYWq4mvGbxNi55pMKIcPk7fJNA0Dqd3NQNBP6WGAzFuMZ-QCA==</field>
+            <field name="webhook_field_ids" eval="[(6, 0, [
+                ref('autoazur.field_x_configuraciones_auto__x_studio_zaccountid'),
+                ref('autoazur.field_x_configuraciones_auto__x_studio_model'),
+                ref('autoazur.field_x_configuraciones_auto__x_studio_source')
+            ])]"></field>
+
+        </record>
+
+    <record id="sincronizar_pedido_az" model="ir.actions.server">
+            <field name="name">WHK_Order_SyncData : Sincronizar Pedido</field>
+            <field name="model_id" ref="model_sale_order"/>
+            <field name="binding_model_id" ref="model_sale_order"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">webhook</field>
+            <field name="webhook_url">https://az-plugins-functions-bsgzhygmbrakafcn.southcentralus-01.azurewebsites.net/api/WHK_Order_SyncData?code=0okvlxYWq4mvGbxNi55pMKIcPk7fJNA0Dqd3NQNBP6WGAzFuMZ-QCA==</field>
+            <field name="webhook_field_ids" eval="[(6, 0, [
+                ref('autoazur.field_sale_order__x_studio_azaccountid'),
+                ref('autoazur.field_sale_order__x_studio_context'),
+                ref('autoazur.field_sale_order__x_studio_source'),
+                ref('autoazur.field_sale_order__x_studio_folio_az'),
+                ref('sale.field_sale_order__client_order_ref')
+            ])]"></field>
+        </record>
+
+    <record id="crear_almacen_az" model="ir.actions.server">
+            <field name="name">WHK_AZWarehouse_SyncData : Crear Almacen</field>
+            <field name="model_id" ref="model_x_invubisync"/>
+            <field name="binding_model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">webhook</field>
+            <field name="webhook_url">https://az-plugins-functions-bsgzhygmbrakafcn.southcentralus-01.azurewebsites.net/api/WHK_AZWarehouse_SyncData?code=0okvlxYWq4mvGbxNi55pMKIcPk7fJNA0Dqd3NQNBP6WGAzFuMZ-QCA==</field>
+            <field name="webhook_field_ids" eval="[(6, 0, [
+                ref('autoazur.field_x_invubisync__x_name'),
+                ref('autoazur.field_x_invubisync__x_studio_azaccountid'),
+                ref('autoazur.field_x_invubisync__x_studio_context'),
+                ref('autoazur.field_x_invubisync__x_studio_source'),
+                ref('autoazur.field_x_invubisync__x_studio_calle'),
+                ref('autoazur.field_x_invubisync__x_studio_numero'),
+                ref('autoazur.field_x_invubisync__x_studio_colonia'),
+                ref('autoazur.field_x_invubisync__x_studio_zip'),
+                ref('autoazur.field_x_invubisync__x_studio_ciudad'),
+                ref('autoazur.field_x_invubisync__x_studio_estado'),
+                ref('autoazur.field_x_invubisync__x_studio_pais'),
+            ])]"></field>
+
+        </record>
+
+    <record id="asignar_almacen_az" model="ir.actions.server">
+            <field name="name">WHK_Odoo_SyncWarehouse : Asignar Almacen</field>
+            <field name="model_id" ref="model_x_invubisync"/>
+            <field name="binding_model_id" ref="autoazur.model_x_invubisync"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">webhook</field>
+            <field name="webhook_url">https://az-plugins-functions-bsgzhygmbrakafcn.southcentralus-01.azurewebsites.net/api/WHK_Odoo_SyncWarehouse?code=0okvlxYWq4mvGbxNi55pMKIcPk7fJNA0Dqd3NQNBP6WGAzFuMZ-QCA==</field>
+            <field name="webhook_field_ids" eval="[(6, 0, [
+                ref('autoazur.field_x_invubisync__x_name'),
+                ref('autoazur.field_x_invubisync__x_studio_azaccountid'),
+                ref('autoazur.field_x_invubisync__x_studio_source_syncwarehouse'),
+            ])]"></field>
+
+        </record>
+
 </odoo>
