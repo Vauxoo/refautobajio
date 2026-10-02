@@ -26,3 +26,7 @@
 	path = edi-document
 	url = git@git.vauxoo.com:vauxoo/edi-document.git
 	branch = 17.0
+[submodule "pos-stock-control"]
+	path = pos-stock-control
+	url = git@git.vauxoo.com:vauxoo/pos-stock-control.git
+	branch = 17.0
